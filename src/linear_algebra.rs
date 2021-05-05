@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, DivAssign, Mul, MulAssign, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
@@ -25,10 +25,19 @@ impl Vec3 {
     }
 
     pub fn cross(&self, other: &Vec3) -> Vec3 {
-        Vec3{
+        Vec3 {
             x: self.y * other.z - self.z * other.y,
             y: self.z * other.x - self.x * other.z,
             z: self.x * other.y - self.y * other.x,
+        }
+    }
+
+    pub fn unit_vector(&self) -> Vec3 {
+        let l = self.length();
+        Vec3 {
+            x: self.x / l,
+            y: self.y / l,
+            z: self.z / l,
         }
     }
 }
@@ -84,6 +93,17 @@ impl Mul<f64> for Vec3 {
             x: self.x * rhs,
             y: self.y * rhs,
             z: self.z * rhs,
+        }
+    }
+}
+
+impl Div<f64> for Vec3 {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self {
+        Vec3 {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
         }
     }
 }
@@ -203,7 +223,18 @@ mod tests {
 
         assert!(approx_eq(k.x, 0.0, f64::EPSILON));
         assert!(approx_eq(k.y, 0.0, f64::EPSILON));
-        assert!(approx_eq(k.z, 1.0, f64::EPSILON));        
+        assert!(approx_eq(k.z, 1.0, f64::EPSILON));
+    }
+
+    #[test]
+    fn unit_vector() {
+        let v1 = Vec3::new(1.0, 2.0, 3.0);
+        let v2 = v1.unit_vector();
+
+        assert!(approx_eq(v2.x, 0.2672612419124244, f64::EPSILON));
+        assert!(approx_eq(v2.y, 0.5345224838248488, f64::EPSILON));
+        assert!(approx_eq(v2.z, 0.8017837257372732, f64::EPSILON));
+        assert!(approx_eq(v2.length(), 1.0, f64::EPSILON));
     }
 
     fn approx_eq(x: f64, y: f64, tolerance: f64) -> bool {
