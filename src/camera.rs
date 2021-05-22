@@ -1,4 +1,4 @@
-use crate::linear_algebra::{Vec3, Ray};
+use crate::linear_algebra::{Ray, Vec3};
 
 pub struct Camera {
     aspect_ratio: f64,
@@ -25,14 +25,14 @@ impl Camera {
             origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
 
         Camera {
-            aspect_ratio: aspect_ratio,
-            viewport_height: viewport_height,
-            viewport_width: viewport_width,
-            focal_length: focal_length,
-            origin: origin,
-            lower_left_corner: lower_left_corner,
-            horizontal: horizontal,
-            vertical: vertical,
+            aspect_ratio,
+            viewport_height,
+            viewport_width,
+            focal_length,
+            origin,
+            lower_left_corner,
+            horizontal,
+            vertical,
         }
     }
 

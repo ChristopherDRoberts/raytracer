@@ -12,24 +12,26 @@ pub struct HitRecord {
     pub t: f64,
     pub hit_point: Point,
     pub normal: Vec3,
-    pub front_face: bool
+    pub front_face: bool,
 }
 
 impl HitRecord {
     pub fn new(t: f64, ray: Ray, outward_normal: Vec3) -> Self {
         let hit_point = ray.at(t);
         let front_face = ray.direction.dot(&outward_normal) < 0.0;
+
         let normal = if front_face {
             outward_normal
         } else {
             -outward_normal
         };
-        return HitRecord {
-            t: t,
-            hit_point: hit_point,
-            normal: normal,
-            front_face: front_face,
-        };
+
+        HitRecord {
+            t,
+            hit_point,
+            normal,
+            front_face,
+        }
     }
 }
 
@@ -41,10 +43,7 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new(centre: Point, radius: f64) -> Self {
-        Sphere {
-            centre: centre,
-            radius: radius,
-        }
+        Sphere { centre, radius }
     }
 }
 
@@ -55,6 +54,7 @@ impl Hittable for Sphere {
         let half_b = oc.dot(&ray.direction);
         let c = oc.length_squared() - self.radius * self.radius;
         let discriminant = half_b * half_b - a * c;
+
         if discriminant <= 0.0 {
             return None;
         }
@@ -74,16 +74,18 @@ impl Hittable for Sphere {
     }
 }
 
-pub struct HittableList{
-    objects: Vec<Rc<dyn Hittable>>
+pub struct HittableList {
+    objects: Vec<Rc<dyn Hittable>>,
 }
 
-impl HittableList{
-    pub fn new() -> Self{
-        HittableList{objects: Vec::<Rc<dyn Hittable>>::new()}
+impl HittableList {
+    pub fn new() -> Self {
+        HittableList {
+            objects: Vec::<Rc<dyn Hittable>>::new(),
+        }
     }
 
-    pub fn add(&mut self, item: Rc<dyn Hittable>){
+    pub fn add(&mut self, item: Rc<dyn Hittable>) {
         self.objects.push(item);
     }
 
@@ -92,28 +94,28 @@ impl HittableList{
     }
 }
 
-impl Hittable for HittableList{
-    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>{
+impl Hittable for HittableList {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut closest_hit = None;
         let mut min_t = t_max;
 
-        for object in &self.objects{
+        for object in &self.objects {
             if let Some(hit_record) = object.hit(ray, t_min, t_max) {
-                if hit_record.t < min_t{
+                if hit_record.t < min_t {
                     min_t = hit_record.t;
                     closest_hit = Some(hit_record);
                 }
             }
         }
 
-        return closest_hit;
+        closest_hit
     }
 }
 
 #[cfg(test)]
-mod tests{
+mod tests {
     use super::*;
-    mod sphere_tests{
+    mod sphere_tests {
         use super::*;
         #[test]
         fn hit() {
@@ -123,7 +125,6 @@ mod tests{
             let internal_ray = Ray::new(sphere.centre, hit_ray.direction);
 
             assert!(sphere.hit(miss_ray, 0.0, 100.0).is_none());
-            
             let hit_record = sphere.hit(hit_ray, 0.0, 100.0).unwrap();
             let internal_hit_record = sphere.hit(internal_ray, 0.0, 100.0).unwrap();
 
@@ -135,7 +136,7 @@ mod tests{
         }
     }
 
-    mod hittable_list_tests{
+    mod hittable_list_tests {
         use super::*;
 
         #[test]
@@ -150,7 +151,10 @@ mod tests{
 
             let miss_ray = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0));
             let ray1 = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
-            let ray2 = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 10.0, 0.0).unit_vector());
+            let ray2 = Ray::new(
+                Vec3::new(0.0, 0.0, 0.0),
+                Vec3::new(0.0, 10.0, 0.0).unit_vector(),
+            );
 
             let miss = list.hit(miss_ray, 0.0, 100.0);
             let hit1 = list.hit(ray1, 0.0, 100.0);

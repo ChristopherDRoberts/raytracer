@@ -1,3 +1,4 @@
+use crate::random::rand;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub};
 
 #[derive(Debug, Copy, Clone)]
@@ -89,11 +90,7 @@ impl Mul for Vec3 {
 impl Mul<f64> for Vec3 {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self {
-        Vec3::new(
-            self.v[0] * rhs,
-            self.v[1] * rhs,
-            self.v[2] * rhs,
-        )
+        Vec3::new(self.v[0] * rhs, self.v[1] * rhs, self.v[2] * rhs)
     }
 }
 
@@ -107,11 +104,7 @@ impl Mul<Vec3> for f64 {
 impl Div<f64> for Vec3 {
     type Output = Self;
     fn div(self, rhs: f64) -> Self {
-        Vec3::new(
-            self.v[0] / rhs,
-            self.v[1] / rhs,
-            self.v[2] / rhs,
-        )
+        Vec3::new(self.v[0] / rhs, self.v[1] / rhs, self.v[2] / rhs)
     }
 }
 
@@ -139,6 +132,26 @@ impl DivAssign<f64> for Vec3 {
     }
 }
 
+pub fn random_vector(min: f64, max: f64) -> Vec3 {
+    let x = rand(min, max);
+    let y = rand(min, max);
+    let z = rand(min, max);
+    Vec3::new(x, y, z)
+}
+
+pub fn random_vector_in_unit_sphere() -> Vec3 {
+    loop {
+        let v = random_vector(-1.0, 1.0);
+        if v.length_squared() < 1.0 {
+            return v;
+        }
+    }
+}
+
+pub fn random_unit_vector() -> Vec3 {
+    random_vector_in_unit_sphere().unit_vector()
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Ray {
     pub origin: Vec3,
@@ -147,10 +160,7 @@ pub struct Ray {
 
 impl Ray {
     pub fn new(origin: Vec3, direction: Vec3) -> Self {
-        Ray {
-            origin: origin,
-            direction: direction,
-        }
+        Ray { origin, direction }
     }
 
     pub fn at(&self, t: f64) -> Vec3 {

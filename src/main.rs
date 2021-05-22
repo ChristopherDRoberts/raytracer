@@ -1,9 +1,10 @@
 use std::io::stderr;
 use std::io::Write;
 use std::rc::Rc;
-use rand::prelude::*;
+mod random;
+use random::rand;
 mod linear_algebra;
-use linear_algebra::{Ray, Vec3};
+use linear_algebra::{Ray, Vec3, random_unit_vector};
 mod geometry;
 use geometry::{Hittable, HittableList, Sphere};
 mod camera;
@@ -22,20 +23,25 @@ fn clamp(x: f64, min: f64, max: f64) -> f64 {
     }
 }
 
-fn ray_colour(ray: Ray, world: &Hittable) -> Colour {
-    if let Some(record) = world.hit(ray, 0.0, f64::INFINITY) {
-        return 0.5 * (record.normal + Colour::new(1.0, 1.0, 1.0));
+fn ray_colour(ray: Ray, world: &dyn Hittable, depth: usize) -> Colour {
+    if depth == 0{
+        return Colour::new(0.0, 0.0, 0.0);
+    }
+
+    if let Some(record) = world.hit(ray, 0.001, f64::INFINITY) {
+        let target = record.hit_point + record.normal + random_unit_vector();
+        return 0.5 * ray_colour(Ray::new(record.hit_point, target - record.hit_point), world, depth - 1);
     }
 
     let unit_direction = ray.direction.unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
-    return (1.0 - t) * Colour::new(1.0, 1.0, 1.0) + t * Colour::new(0.5, 0.7, 1.0);
+    (1.0 - t) * Colour::new(1.0, 1.0, 1.0) + t * Colour::new(0.5, 0.7, 1.0)
 }
 
 fn write_colour(pixel_colour: &Colour, samples_per_pixel: usize) {
-    let r = pixel_colour.x()/(samples_per_pixel as f64);
-    let g = pixel_colour.y()/(samples_per_pixel as f64);
-    let b = pixel_colour.z()/(samples_per_pixel as f64);
+    let r = (pixel_colour.x()/(samples_per_pixel as f64)).sqrt();
+    let g = (pixel_colour.y()/(samples_per_pixel as f64)).sqrt();
+    let b = (pixel_colour.z()/(samples_per_pixel as f64)).sqrt();
 
     let red = (256.0*clamp(r,0.0,0.999)) as usize;
     let green = (256.0*clamp(g,0.0,0.999)) as usize;
@@ -49,6 +55,7 @@ fn main() {
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as usize;
     let samples_per_pixel = 100;
+    let max_depth = 50;
 
     // World
     let mut world = HittableList::new();
@@ -65,14 +72,13 @@ fn main() {
     for row in (0..image_height).rev() {
         eprint!("\rScanlines remaining: {}", row);
         stderr().flush().unwrap();
-        let mut rng = rand::thread_rng();
         for col in 0..image_width {
             let mut pixel_colour = Colour::new(0.0, 0.0, 0.0);
-            for s in 0..samples_per_pixel{
-                let u = (col as f64 + rng.gen::<f64>()) / (image_width - 1) as f64;
-                let v = (row as f64 + rng.gen::<f64>()) / (image_height - 1) as f64;
+            for _ in 0..samples_per_pixel{
+                let u = (col as f64 + rand(0.0, 1.0)) / (image_width - 1) as f64;
+                let v = (row as f64 + rand(0.0, 1.0)) / (image_height - 1) as f64;
                 let ray = camera.get_ray(u, v);
-                pixel_colour += ray_colour(ray, &world);
+                pixel_colour += ray_colour(ray, &world, max_depth);
             }
             write_colour(&pixel_colour, samples_per_pixel);
         }
