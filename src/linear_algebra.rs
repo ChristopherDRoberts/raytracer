@@ -8,7 +8,7 @@ pub struct Vec3 {
 
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Vec3 { v: [x, y, z] }
+        Self { v: [x, y, z] }
     }
 
     pub fn x(&self) -> f64 {
@@ -141,6 +141,14 @@ impl DivAssign<f64> for Vec3 {
 
 pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2.0 * v.dot(&n) * n
+}
+
+pub fn refract(unit_vector: Vec3, normal: Vec3, refraction_ratio: f64) -> Vec3{
+    let cosine = f64::min(1.0, -(unit_vector.dot(&normal)));
+    let perp_vec = refraction_ratio*(unit_vector + cosine*normal);
+    let parallel_vec = -f64::sqrt((1.0 - perp_vec.length_squared()).abs())*normal;
+    
+    perp_vec + parallel_vec
 }
 
 pub fn random_vector(min: f64, max: f64) -> Vec3 {

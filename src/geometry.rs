@@ -27,7 +27,7 @@ impl HitRecord {
             -outward_normal
         };
 
-        HitRecord {
+        Self {
             t,
             hit_point,
             normal,
@@ -45,7 +45,7 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new(centre: Point, radius: f64, material: Rc<dyn Material>) -> Self {
-        Sphere { centre, radius, material }
+        Self { centre, radius, material }
     }
 }
 
@@ -82,7 +82,7 @@ pub struct HittableList {
 
 impl HittableList {
     pub fn new() -> Self {
-        HittableList {
+        Self {
             objects: Vec::<Rc<dyn Hittable>>::new(),
         }
     }

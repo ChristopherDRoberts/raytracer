@@ -24,7 +24,7 @@ impl Camera {
         let lower_left_corner =
             origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
 
-        Camera {
+        Self {
             aspect_ratio,
             viewport_height,
             viewport_width,
