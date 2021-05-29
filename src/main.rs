@@ -4,7 +4,7 @@ use std::rc::Rc;
 mod random;
 use random::rand;
 mod linear_algebra;
-use linear_algebra::{Ray, Vec3, random_unit_vector};
+use linear_algebra::{Ray, Vec3, random_unit_vector, random_vector};
 mod geometry;
 use geometry::{Hittable, HittableList, Sphere};
 mod camera;
@@ -58,32 +58,59 @@ fn write_colour(pixel_colour: &Colour, samples_per_pixel: usize) {
 
 fn main() {
     // Image
-    let aspect_ratio = 16.0 / 9.0;
-    let image_width = 400;
+    let aspect_ratio = 3.0 / 2.0;
+    let image_width = 1200;
     let image_height = (image_width as f64 / aspect_ratio) as usize;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 500;
     let max_depth = 50;
 
     // World
     let mut world = HittableList::new();
 
-    let material_ground = Rc::new(Lambertian::new(Colour::new(0.8, 0.8, 0.0)));
-    let material_centre = Rc::new(Lambertian::new(Colour::new(0.1, 0.2, 0.5)));
-    let material_left = Rc::new(Dielectric::new(1.5));
-    let material_right = Rc::new(Metal::new(Colour::new(0.8, 0.6, 0.2), 0.0));
+    let material_ground = Rc::new(Lambertian::new(Colour::new(0.5, 0.5, 0.5)));
+    world.add(Rc::new(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0, material_ground.clone())));
 
-    world.add(Rc::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, material_ground.clone())));
-    world.add(Rc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material_centre.clone())));
-    world.add(Rc::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left.clone())));
-    world.add(Rc::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), -0.45, material_left.clone())));
-    world.add(Rc::new(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material_right.clone())));
+    let offset_point = Vec3::new(4.0, 0.2, 0.0);
+    let glass_material = Rc::new(Dielectric::new(1.5));
+
+    for a in -11..11{
+        for b in -11..11{
+            let choose_mat = rand(0.0,1.0);
+            let centre = Vec3::new(a as f64 + 0.9*rand(0.0,1.0), 0.2, b as f64 + 0.9*rand(0.0,1.0));
+
+            if (centre - offset_point).length() > 0.9 {
+                if choose_mat < 0.8 {
+                    let albedo = random_vector(0.0, 1.0) * random_vector(0.0, 1.0);
+                    let sphere_material = Rc::new(Lambertian::new(albedo));
+                    world.add(Rc::new(Sphere::new(centre, 0.2, sphere_material)));
+                } else if choose_mat < 0.95 {
+                    let albedo = random_vector(0.5, 1.0);
+                    let fuzz = rand(0.0, 0.5);
+                    let sphere_material = Rc::new(Metal::new(albedo, fuzz));
+                    world.add(Rc::new(Sphere::new(centre, 0.2, sphere_material)));
+                } else {
+                    let sphere_material = glass_material.clone();
+                    world.add(Rc::new(Sphere::new(centre, 0.2, sphere_material)));
+                }
+            }
+        }
+    }
+
+    world.add(Rc::new(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0, glass_material.clone())));
+
+    let brown_material = Rc::new(Lambertian::new(Colour::new(0.4, 0.2, 0.1)));
+    world.add(Rc::new(Sphere::new(Vec3::new(-4.0, 1.0, 0.0), 1.0, brown_material)));
+
+    let shiny_steel_material = Rc::new(Metal::new(Colour::new(0.7, 0.6, 0.5), 0.0));
+    world.add(Rc::new(Sphere::new(Vec3::new(4.0, 1.0, 0.0), 1.0, shiny_steel_material)));
+    
 
     // Camera
-    let look_from = Vec3::new(3.0, 3.0, 2.0);
-    let look_at = Vec3::new(0.0, 0.0, -1.0);
+    let look_from = Vec3::new(13.0, 2.0, 3.0);
+    let look_at = Vec3::new(0.0, 0.0, 0.0);
     let vec_up = Vec3::new(0.0, 1.0, 0.0);
-    let focus_dist = (look_at - look_from).length();
-    let aperture = 2.0;
+    let focus_dist = 10.0;
+    let aperture = 0.1;
     let camera = Camera::new(look_from, look_at, vec_up, 20.0, aspect_ratio, aperture, focus_dist);
 
     // Render
