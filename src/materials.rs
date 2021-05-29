@@ -14,7 +14,7 @@ pub trait Material {
 pub struct EmptyMaterial;
 
 impl Material for EmptyMaterial {
-    fn scatter(&self, incident_ray: &Ray, hit_record: &HitRecord) -> Option<ScatteredRay> {
+    fn scatter(&self, _incident_ray: &Ray, _hit_record: &HitRecord) -> Option<ScatteredRay> {
         None
     }
 }
@@ -30,7 +30,7 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, incident_ray: &Ray, hit_record: &HitRecord) -> Option<ScatteredRay> {
+    fn scatter(&self, _incident_ray: &Ray, hit_record: &HitRecord) -> Option<ScatteredRay> {
         let mut scatter_direction = hit_record.normal + random_unit_vector();
 
         if scatter_direction.near_zero() {
@@ -48,18 +48,19 @@ impl Material for Lambertian {
 
 pub struct Metal {
     albedo: Colour,
+    fuzz: f64,
 }
 
 impl Metal {
-    pub fn new(albedo: Colour) -> Self {
-        Self { albedo }
+    pub fn new(albedo: Colour, fuzz: f64) -> Self {
+        Self { albedo, fuzz }
     }
 }
 
 impl Material for Metal {
     fn scatter(&self, incident_ray: &Ray, hit_record: &HitRecord) -> Option<ScatteredRay> {
         let reflected = reflect(incident_ray.direction, hit_record.normal);
-        let scattered = Ray::new(hit_record.hit_point, reflected);
+        let scattered = Ray::new(hit_record.hit_point, reflected + self.fuzz * random_unit_vector());
 
         if scattered.direction.dot(&hit_record.normal) > 0.0 {
             return Some(ScatteredRay {
