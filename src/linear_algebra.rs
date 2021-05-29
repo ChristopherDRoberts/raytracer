@@ -143,11 +143,10 @@ pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2.0 * v.dot(&n) * n
 }
 
-pub fn refract(unit_vector: Vec3, normal: Vec3, refraction_ratio: f64) -> Vec3{
+pub fn refract(unit_vector: Vec3, normal: Vec3, refraction_ratio: f64) -> Vec3 {
     let cosine = f64::min(1.0, -(unit_vector.dot(&normal)));
-    let perp_vec = refraction_ratio*(unit_vector + cosine*normal);
-    let parallel_vec = -f64::sqrt((1.0 - perp_vec.length_squared()).abs())*normal;
-    
+    let perp_vec = refraction_ratio * (unit_vector + cosine * normal);
+    let parallel_vec = -f64::sqrt((1.0 - perp_vec.length_squared()).abs()) * normal;
     perp_vec + parallel_vec
 }
 
@@ -169,6 +168,15 @@ pub fn random_vector_in_unit_sphere() -> Vec3 {
 
 pub fn random_unit_vector() -> Vec3 {
     random_vector_in_unit_sphere().unit_vector()
+}
+
+pub fn random_vec_in_unit_disk() -> Vec3 {
+    loop {
+        let v = Vec3::new(rand(-1.0, 1.0), rand(-1.0, 1.0), 0.0);
+        if v.length_squared() < 1.0 {
+            return v;
+        };
+    }
 }
 
 #[derive(Debug, Copy, Clone)]

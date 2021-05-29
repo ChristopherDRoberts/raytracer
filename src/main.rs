@@ -79,10 +79,12 @@ fn main() {
     world.add(Rc::new(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material_right.clone())));
 
     // Camera
-    let look_from = Vec3::new(-2.0, 2.0, 1.0);
+    let look_from = Vec3::new(3.0, 3.0, 2.0);
     let look_at = Vec3::new(0.0, 0.0, -1.0);
     let vec_up = Vec3::new(0.0, 1.0, 0.0);
-    let camera = Camera::new(look_from, look_at, vec_up, 20.0, aspect_ratio);
+    let focus_dist = (look_at - look_from).length();
+    let aperture = 2.0;
+    let camera = Camera::new(look_from, look_at, vec_up, 20.0, aspect_ratio, aperture, focus_dist);
 
     // Render
 
