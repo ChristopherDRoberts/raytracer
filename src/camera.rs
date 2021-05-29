@@ -1,10 +1,7 @@
 use crate::linear_algebra::{Ray, Vec3};
+use std::f64::consts::PI;
 
 pub struct Camera {
-    aspect_ratio: f64,
-    viewport_height: f64,
-    viewport_width: f64,
-    focal_length: f64,
     origin: Vec3,
     lower_left_corner: Vec3,
     horizontal: Vec3,
@@ -12,23 +9,22 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new() -> Self {
-        let aspect_ratio = 16.0 / 9.0;
-        let viewport_height = 2.0;
+    pub fn new(look_from: Vec3, look_at: Vec3, vec_up: Vec3, vertical_fov : f64, aspect_ratio: f64) -> Self {
+        let fov_in_radians = (vertical_fov / 180.0) * PI;
+        let viewport_height = 2.0 * (fov_in_radians / 2.0).tan();
         let viewport_width = aspect_ratio * viewport_height;
-        let focal_length = 1.0;
+        
+        let w = (look_from - look_at).unit_vector();
+        let u = (vec_up.cross(&w)).unit_vector();
+        let v = w.cross(&u);
 
-        let origin = Vec3::new(0.0, 0.0, 0.0);
-        let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-        let vertical = Vec3::new(0.0, viewport_height, 0.0);
+        let origin = look_from;
+        let horizontal = u * viewport_width;
+        let vertical = v * viewport_height;
         let lower_left_corner =
-            origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
+            origin - horizontal / 2.0 - vertical / 2.0 - w;
 
         Self {
-            aspect_ratio,
-            viewport_height,
-            viewport_width,
-            focal_length,
             origin,
             lower_left_corner,
             horizontal,

@@ -11,6 +11,7 @@ mod camera;
 use camera::Camera;
 mod materials;
 use materials::{Lambertian, Metal, Dielectric};
+use std::f64::consts::PI;
 
 type Colour = Vec3;
 type Point = Vec3;
@@ -74,12 +75,14 @@ fn main() {
     world.add(Rc::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, material_ground.clone())));
     world.add(Rc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material_centre.clone())));
     world.add(Rc::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left.clone())));
-    world.add(Rc::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), -0.4, material_left.clone())));
+    world.add(Rc::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), -0.45, material_left.clone())));
     world.add(Rc::new(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material_right.clone())));
 
-
     // Camera
-    let camera = Camera::new();
+    let look_from = Vec3::new(-2.0, 2.0, 1.0);
+    let look_at = Vec3::new(0.0, 0.0, -1.0);
+    let vec_up = Vec3::new(0.0, 1.0, 0.0);
+    let camera = Camera::new(look_from, look_at, vec_up, 20.0, aspect_ratio);
 
     // Render
 
