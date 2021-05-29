@@ -45,6 +45,13 @@ impl Vec3 {
         let l = self.length();
         Vec3::new(self.v[0] / l, self.v[1] / l, self.v[2] / l)
     }
+
+    pub fn near_zero(&self) -> bool {
+        let tolerance = 1e-8;
+        (self.v[0].abs() < tolerance)
+            && (self.v[1].abs() < tolerance)
+            && (self.v[2].abs() < tolerance)
+    }
 }
 
 impl Neg for Vec3 {
@@ -130,6 +137,10 @@ impl DivAssign<f64> for Vec3 {
         self.v[1] /= rhs;
         self.v[2] /= rhs;
     }
+}
+
+pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+    v - 2.0 * v.dot(&n) * n
 }
 
 pub fn random_vector(min: f64, max: f64) -> Vec3 {

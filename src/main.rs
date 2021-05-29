@@ -9,6 +9,8 @@ mod geometry;
 use geometry::{Hittable, HittableList, Sphere};
 mod camera;
 use camera::Camera;
+mod materials;
+use materials::{Lambertian, Metal};
 
 type Colour = Vec3;
 type Point = Vec3;
@@ -29,8 +31,12 @@ fn ray_colour(ray: Ray, world: &dyn Hittable, depth: usize) -> Colour {
     }
 
     if let Some(record) = world.hit(ray, 0.001, f64::INFINITY) {
-        let target = record.hit_point + record.normal + random_unit_vector();
-        return 0.5 * ray_colour(Ray::new(record.hit_point, target - record.hit_point), world, depth - 1);
+
+        if let Some(scattered_ray) = record.material.scatter(&ray, &record){
+            return scattered_ray.attenuation * ray_colour(scattered_ray.ray, world, depth - 1);
+        }
+        
+        return Colour::new(0.0, 0.0, 0.0);
     }
 
     let unit_direction = ray.direction.unit_vector();
@@ -59,8 +65,17 @@ fn main() {
 
     // World
     let mut world = HittableList::new();
-    world.add(Rc::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)));
-    world.add(Rc::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)));
+
+    let material_ground = Rc::new(Lambertian::new(Colour::new(0.8, 0.8, 0.0)));
+    let material_centre = Rc::new(Lambertian::new(Colour::new(0.7, 0.3, 0.3)));
+    let material_left = Rc::new(Metal::new(Colour::new(0.8, 0.8, 0.8)));
+    let material_right = Rc::new(Metal::new(Colour::new(0.8, 0.6, 0.2)));
+
+    world.add(Rc::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, material_ground.clone())));
+    world.add(Rc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material_centre.clone())));
+    world.add(Rc::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left.clone())));
+    world.add(Rc::new(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material_right.clone())));
+
 
     // Camera
     let camera = Camera::new();

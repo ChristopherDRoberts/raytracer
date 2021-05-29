@@ -1,5 +1,6 @@
 use crate::linear_algebra::{Ray, Vec3};
 use std::rc::Rc;
+use crate::materials::{Material, EmptyMaterial};
 
 type Point = Vec3;
 
@@ -7,16 +8,16 @@ pub trait Hittable {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
-#[derive(Debug)]
 pub struct HitRecord {
     pub t: f64,
     pub hit_point: Point,
     pub normal: Vec3,
     pub front_face: bool,
+    pub material: Rc<dyn Material>
 }
 
 impl HitRecord {
-    pub fn new(t: f64, ray: Ray, outward_normal: Vec3) -> Self {
+    pub fn new(t: f64, ray: Ray, outward_normal: Vec3, material: Rc<dyn Material>) -> Self {
         let hit_point = ray.at(t);
         let front_face = ray.direction.dot(&outward_normal) < 0.0;
 
@@ -31,19 +32,20 @@ impl HitRecord {
             hit_point,
             normal,
             front_face,
+            material,
         }
     }
 }
 
-#[derive(Debug)]
 pub struct Sphere {
     centre: Point,
     radius: f64,
+    material: Rc<dyn Material>
 }
 
 impl Sphere {
-    pub fn new(centre: Point, radius: f64) -> Self {
-        Sphere { centre, radius }
+    pub fn new(centre: Point, radius: f64, material: Rc<dyn Material>) -> Self {
+        Sphere { centre, radius, material }
     }
 }
 
@@ -70,7 +72,7 @@ impl Hittable for Sphere {
 
         let outward_normal = (ray.at(root) - self.centre) / self.radius;
 
-        Some(HitRecord::new(root, ray, outward_normal))
+        Some(HitRecord::new(root, ray, outward_normal, self.material.clone()))
     }
 }
 
@@ -119,7 +121,7 @@ mod tests {
         use super::*;
         #[test]
         fn hit() {
-            let sphere = Sphere::new(Point::new(0.0, 0.0, -2.0), 1.0);
+            let sphere = Sphere::new(Point::new(0.0, 0.0, -2.0), 1.0, Rc::new(EmptyMaterial));
             let hit_ray = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
             let miss_ray = Ray::new(hit_ray.origin, -hit_ray.origin);
             let internal_ray = Ray::new(sphere.centre, hit_ray.direction);
@@ -142,9 +144,9 @@ mod tests {
         #[test]
         fn hit() {
             let mut list = HittableList::new();
-            let sphere1 = Sphere::new(Point::new(0.0, 0.0, -2.0), 1.0);
-            let sphere2 = Sphere::new(Point::new(0.0, 10.0, 0.0), 1.0);
-            let sphere3 = Sphere::new(Point::new(0.0, 0.0, -20.0), 1.0);
+            let sphere1 = Sphere::new(Point::new(0.0, 0.0, -2.0), 1.0, Rc::new(EmptyMaterial));
+            let sphere2 = Sphere::new(Point::new(0.0, 10.0, 0.0), 1.0, Rc::new(EmptyMaterial));
+            let sphere3 = Sphere::new(Point::new(0.0, 0.0, -20.0), 1.0, Rc::new(EmptyMaterial));
             list.add(Rc::new(sphere1));
             list.add(Rc::new(sphere2));
             list.add(Rc::new(sphere3));
